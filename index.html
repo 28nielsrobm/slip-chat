@@ -24,7 +24,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
-  // ===== Initialize Firebase =====
   const firebaseConfig = {
     apiKey: "AIzaSyDVCyHEJwaGA1BQZnDTlqtcx_0vTGnj7jA",
     authDomain: "slip-chat.firebaseapp.com",
@@ -35,29 +34,62 @@
     appId: "1:623395371169:web:dde6bd4d3f1ae04f3318e0",
     measurementId: "G-ZB7T0EQX4F"
   };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
   const chatDiv = document.getElementById('chat');
+  const msgInput = document.getElementById('msg');
 
-  // ===== Display messages =====
+  // Load messages (NO DELETE BUTTON)
   db.ref('chat').on('child_added', snapshot => {
     const message = snapshot.val();
+    const messageId = snapshot.key;
+
     const div = document.createElement('div');
     div.classList.add('message');
-    div.innerHTML = `<span class="name">${message.name}:</span> <span class="text">${message.text}</span>`;
+    div.id = messageId;
+
+    const time = new Date(message.time).toLocaleTimeString();
+
+    div.innerHTML =
+      `<span style="color:#888">[${time}]</span>
+       <span class="name">${message.name}:</span>
+       <span class="text">${message.text}</span>`;
+
     chatDiv.appendChild(div);
     chatDiv.scrollTop = chatDiv.scrollHeight;
   });
 
-  // ===== Send message =====
+  // Remove messages if admin deletes them
+  db.ref('chat').on('child_removed', snapshot => {
+    const msg = document.getElementById(snapshot.key);
+    if (msg) {
+      msg.remove();
+    }
+  });
+
+  // Send message
   function sendMessage() {
     const name = document.getElementById('name').value || "Anonymous";
-    const text = document.getElementById('msg').value;
-    if(text.trim() === "") return;
-    db.ref('chat').push({ name, text });
-    document.getElementById('msg').value = "";
+    const text = msgInput.value;
+    if (text.trim() === "") return;
+
+    db.ref('chat').push({
+      name: name,
+      text: text,
+      time: Date.now()
+    });
+
+    msgInput.value = "";
   }
+
+  // Press Enter to send
+  msgInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
 </script>
 </body>
 </html>
