@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Free Text Chat</title>
+  <style>
+    body { font-family: Arial; background: #111; color: #fff; text-align: center; }
+    #chat { border: 1px solid #444; height: 400px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+    #msg { width: 70%; padding: 5px; }
+    button { padding: 5px 10px; }
+    .message { padding: 2px 0; }
+    .name { font-weight: bold; color: #0f0; }
+    .text { color: #fff; }
+  </style>
+</head>
+<body>
+<h1>Free Chat Room</h1>
+<div id="chat"></div>
+<input id="name" placeholder="Your name">
+<br><br>
+<input id="msg" placeholder="Type a message">
+<button onclick="sendMessage()">Send</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  // ===== Initialize Firebase =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVCyHEJwaGA1BQZnDTlqtcx_0vTGnj7jA",
+    authDomain: "slip-chat.firebaseapp.com",
+    databaseURL: "https://slip-chat-default-rtdb.firebaseio.com",
+    projectId: "slip-chat",
+    storageBucket: "slip-chat.firebasestorage.app",
+    messagingSenderId: "623395371169",
+    appId: "1:623395371169:web:dde6bd4d3f1ae04f3318e0",
+    measurementId: "G-ZB7T0EQX4F"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const chatDiv = document.getElementById('chat');
+
+  // ===== Display messages =====
+  db.ref('chat').on('child_added', snapshot => {
+    const message = snapshot.val();
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.innerHTML = `<span class="name">${message.name}:</span> <span class="text">${message.text}</span>`;
+    chatDiv.appendChild(div);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  });
+
+  // ===== Send message =====
+  function sendMessage() {
+    const name = document.getElementById('name').value || "Anonymous";
+    const text = document.getElementById('msg').value;
+    if(text.trim() === "") return;
+    db.ref('chat').push({ name, text });
+    document.getElementById('msg').value = "";
+  }
+</script>
+</body>
+</html>
